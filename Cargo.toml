@@ -1,0 +1,7 @@
+[workspace]
+
+members = [
+    "chimp_core",
+    "chimp_desktop",
+    "chimp_wasm"
+]

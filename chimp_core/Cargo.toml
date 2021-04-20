@@ -1,0 +1,7 @@
+[package]
+name = "chimp_core"
+version = "0.1.0"
+authors = ["m5tfi"]
+edition = "2018"
+
+[dependencies]
