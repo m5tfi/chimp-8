@@ -16,7 +16,7 @@ struct App {
     is_running: bool,
 }
 
-// --- Constansts ---
+// --- Constants ---
 impl App {
     const SCALE: u32 = 15;
     #[allow(clippy::cast_possible_truncation)]
