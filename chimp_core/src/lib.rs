@@ -1,5 +1,4 @@
 #![warn(clippy::pedantic, clippy::all)]
-// #![allow(unused_variables, dead_code)] // TODO: remove this later.
 #![feature(stmt_expr_attributes)]
 
 use rand::random;
@@ -139,7 +138,7 @@ impl Vm {
     /// Returns a single Opcode, based on the current Program Counter.
     fn fetch_next_opcode(&mut self) -> u16 {
         let higher_byte = u16::from(self.memory[self.pc as usize]);
-        let lower_byte = u16::from(self.memory[self.pc as usize]);
+        let lower_byte = u16::from(self.memory[self.pc as usize + 1]);
         let opcode = (higher_byte << 8) | lower_byte;
         self.pc += 2;
         opcode
@@ -154,7 +153,7 @@ impl Vm {
 
         #[rustfmt::skip]
         match (digit_1, digit_2, digit_3, digit_4) {
-            (0x0, 0x0, 0x0, 0x0) => { /* Do nothing */ },
+            (0x0, 0x0, 0x0, 0x0) => { /* Do nothing */ }
             (0x0, 0x0, 0xE, 0x0) => self.clear_display(),
             (0x0, 0x0, 0xE, 0xE) => self.return_from_subroutine(),
             (0x1,   _,   _,   _) => self.jump_to_address(opcode),
@@ -189,7 +188,9 @@ impl Vm {
             (0xF,   _, 0x3, 0x3) => self.load_i_bcd_vx(digit_2),
             (0xF,   _, 0x5, 0x5) => self.store_v0_vx_into_i(digit_2),
             (0xF,   _, 0x6, 0x5) => self.load_i_into_v0_vx(digit_2),
-            (  _,   _,   _,   _) => unimplemented!("Unimplemented opcode: {}", opcode),
+            (  _,   _,   _,   _) => {
+                unimplemented!("Unimplemented opcode: ({:#x}) at pc: ({:#x})", opcode, self.pc)
+            }
         }
     }
 
@@ -212,7 +213,7 @@ impl Vm {
     /// 2NNN
     fn call_subroutine(&mut self, opcode: u16) {
         let nnn = opcode & 0xFFF;
-        self.push_stack(nnn);
+        self.push_stack(self.pc);
         self.pc = nnn;
     }
 
@@ -281,6 +282,7 @@ impl Vm {
         let y = digit_3 as usize;
         self.v_reg[x] &= self.v_reg[y];
     }
+
     /// 8XY3
     fn set_vx_to_bit_xor_vy(&mut self, digit_2: u16, digit_3: u16) {
         let x = digit_2 as usize;
@@ -401,7 +403,7 @@ impl Vm {
     fn skip_if_key_pressed(&mut self, digit_2: u16) {
         let x = digit_2 as usize;
         let vx = self.v_reg[x];
-        let key = self.keys[usize::from(vx)];
+        let key = self.keys[vx as usize];
         if key {
             self.pc += 2;
         }
@@ -411,7 +413,7 @@ impl Vm {
     fn skip_if_key_not_pressed(&mut self, digit_2: u16) {
         let x = digit_2 as usize;
         let vx = self.v_reg[x];
-        let key = self.keys[usize::from(vx)];
+        let key = self.keys[vx as usize];
         if !key {
             self.pc += 2;
         }
@@ -485,7 +487,7 @@ impl Vm {
     fn store_v0_vx_into_i(&mut self, digit_2: u16) {
         let x = digit_2 as usize;
         let i = self.i_reg as usize;
-        for idx in 0..x {
+        for idx in 0..=x {
             self.memory[i + idx] = self.v_reg[idx];
         }
     }
@@ -494,7 +496,7 @@ impl Vm {
     fn load_i_into_v0_vx(&mut self, digit_2: u16) {
         let x = digit_2 as usize;
         let i = self.i_reg as usize;
-        for idx in 0..x {
+        for idx in 0..=x {
             self.v_reg[idx] = self.memory[i + idx];
         }
     }
