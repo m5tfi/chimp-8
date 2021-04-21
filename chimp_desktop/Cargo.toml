@@ -6,3 +6,4 @@ edition = "2018"
 
 [dependencies]
 chimp_core = { path = "../chimp_core" }
+sdl2 = "0.34.4"
