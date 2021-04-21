@@ -2,6 +2,14 @@
 
 A [Chip-8](https://en.wikipedia.org/wiki/CHIP-8) emulator built using [Rust](rust-lang.org).
 
+### How to run
+
+For the desktop version:
+
+```
+$ cargo run --release --bin chimp_desktop roms\PUZZLE
+```
+
 ### References
 
 My main reference is **Austin Bricker**'s [Introduction to Chip-8 book](https://github.com/aquova/chip8-book).
