@@ -17,6 +17,7 @@ pub struct Vm {
     keys: [bool; Self::KEYS_COUNT],
 }
 
+// --- Constants ---
 impl Vm {
     pub const SCREEN_WIDTH: usize = 0x40;
     pub const SCREEN_HEIGHT: usize = 0x20;
@@ -46,11 +47,10 @@ impl Vm {
         0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
         0xF0, 0x80, 0xF0, 0x80, 0x80, // F
     ];
+}
 
-    #[allow(clippy::new_without_default)]
-    #[must_use]
-    /// Initiate a new Vm instance.
-    pub fn new() -> Self {
+impl Default for Vm {
+    fn default() -> Self {
         let mut memory = [0; Self::MEMORY_SIZE];
         memory[..Self::FONT_SET_SIZE].copy_from_slice(&Self::FONT_SET);
         Self {
@@ -66,7 +66,10 @@ impl Vm {
             keys: [false; Self::KEYS_COUNT],
         }
     }
+}
 
+// --- Public Methods ---
+impl Vm {
     /// Resets the Vm to its initial state without creating new object.
     pub fn reset(&mut self) {
         self.pc = Self::START_ADDR;
@@ -82,31 +85,29 @@ impl Vm {
         self.keys = [false; Self::KEYS_COUNT];
     }
 
-    /// Pushes an address to the stack.
-    fn push_stack(&mut self, addr: u16) {
-        self.stack[self.sp as usize] = addr;
-        self.sp += 1;
+    /// Load program bytes into the Vm memory, starting at addr 0x200.
+    pub fn load_program(&mut self, data: &[u8]) {
+        let start = usize::from(Self::START_ADDR);
+        let end = usize::from(Self::START_ADDR) + data.len();
+        self.memory[start..end].copy_from_slice(data);
     }
 
-    /// Pops an address from the stack and returns the last address.
-    fn pop_stack(&mut self) -> u16 {
-        self.sp -= 1;
-        self.stack[self.sp as usize]
+    #[must_use]
+    pub fn get_display(&self) -> &[bool] {
+        &self.display
     }
 
+    pub fn keypress(&mut self, idx: usize, pressed: bool) {
+        self.keys[idx] = pressed;
+    }
+
+    /// Read and execute a single Opcode.
     pub fn tick(&mut self) {
-        let opcode = self.fetch();
-        self.execute(opcode);
+        let opcode = self.fetch_next_opcode();
+        self.execute_opcode(opcode);
     }
 
-    fn fetch(&mut self) -> u16 {
-        let higher_byte = u16::from(self.memory[self.pc as usize]);
-        let lower_byte = u16::from(self.memory[self.pc as usize]);
-        let opcode = (higher_byte << 8) | lower_byte;
-        self.pc += 2;
-        opcode
-    }
-
+    /// Updates the delay and sound timers.
     pub fn tick_timers(&mut self) {
         if self.delay_timer > 0 {
             self.delay_timer -= 1;
@@ -119,8 +120,33 @@ impl Vm {
             self.sound_timer -= 1;
         }
     }
+}
 
-    fn execute(&mut self, opcode: u16) {
+// --- Private Methods ---
+impl Vm {
+    /// Pushes an address to the stack.
+    fn push_stack(&mut self, addr: u16) {
+        self.stack[self.sp as usize] = addr;
+        self.sp += 1;
+    }
+
+    /// Pops an address from the stack and returns the last address.
+    fn pop_stack(&mut self) -> u16 {
+        self.sp -= 1;
+        self.stack[self.sp as usize]
+    }
+
+    /// Returns a single Opcode, based on the current Program Counter.
+    fn fetch_next_opcode(&mut self) -> u16 {
+        let higher_byte = u16::from(self.memory[self.pc as usize]);
+        let lower_byte = u16::from(self.memory[self.pc as usize]);
+        let opcode = (higher_byte << 8) | lower_byte;
+        self.pc += 2;
+        opcode
+    }
+
+    /// Executes a single Opcode.
+    fn execute_opcode(&mut self, opcode: u16) {
         let digit_1 = (opcode & 0xF000) >> 12;
         let digit_2 = (opcode & 0x0F00) >> 8;
         let digit_3 = (opcode & 0x00F0) >> 4;
@@ -136,30 +162,30 @@ impl Vm {
             (0x3,   _,   _,   _) => self.skip_if_vx_equal_nn(digit_2, opcode),
             (0x4,   _,   _,   _) => self.skip_if_vx_not_equal_nn(digit_2, opcode),
             (0x5,   _,   _, 0x0) => self.skip_if_vx_equals_vy(digit_2, digit_3),
-            (0x6,   _,   _,   _) => self.set_vx_nn(digit_2, opcode),
+            (0x6,   _,   _,   _) => self.set_vx_to_nn(digit_2, opcode),
             (0x7,   _,   _,   _) => self.increment_vx_by_nn(digit_2, opcode),
-            (0x8,   _,   _, 0x0) => self.set_vx_vy(digit_2, digit_3),
-            (0x8,   _,   _, 0x1) => self.set_vx_bit_or_vy(digit_2, digit_3),
-            (0x8,   _,   _, 0x2) => self.set_vx_bit_and_vy(digit_2, digit_3),
-            (0x8,   _,   _, 0x3) => self.set_vx_bit_xor_vy(digit_2, digit_3),
+            (0x8,   _,   _, 0x0) => self.set_vx_to_vy(digit_2, digit_3),
+            (0x8,   _,   _, 0x1) => self.set_vx_to_bit_or_vy(digit_2, digit_3),
+            (0x8,   _,   _, 0x2) => self.set_vx_to_bit_and_vy(digit_2, digit_3),
+            (0x8,   _,   _, 0x3) => self.set_vx_to_bit_xor_vy(digit_2, digit_3),
             (0x8,   _,   _, 0x4) => self.increment_vx_by_vy(digit_2, digit_3),
             (0x8,   _,   _, 0x5) => self.decrement_vx_by_vy(digit_2, digit_3),
             (0x8,   _,   _, 0x6) => self.right_shift_vx(digit_2),
-            (0x8,   _,   _, 0x7) => self.set_vx_equal_vy_minus_vx(digit_2, digit_3),
+            (0x8,   _,   _, 0x7) => self.set_vx_to_vy_minus_vx(digit_2, digit_3),
             (0x8,   _,   _, 0xE) => self.left_shift_vx(digit_2),
             (0x9,   _,   _, 0x0) => self.skip_if_vx_not_equal_vy(digit_2, digit_3),
-            (0xA,   _,   _,   _) => self.set_i_nnn(opcode),
+            (0xA,   _,   _,   _) => self.set_i_to_nnn(opcode),
             (0xB,   _,   _,   _) => self.jump_v0_plus_nnn(opcode),
-            (0xC,   _,   _,   _) => self.set_vx_rand_nn(digit_2, opcode),
+            (0xC,   _,   _,   _) => self.set_vx_to_bit_and_rand_nn(digit_2, opcode),
             (0xD,   _,   _,   _) => self.draw_sprite(digit_2, digit_3, digit_4),
             (0xE,   _, 0x9, 0xE) => self.skip_if_key_pressed(digit_2),
             (0xE,   _, 0xA, 0x1) => self.skip_if_key_not_pressed(digit_2),
-            (0xF,   _, 0x0, 0x7) => self.set_vx_dt(digit_2),
+            (0xF,   _, 0x0, 0x7) => self.set_vx_to_dt(digit_2),
             (0xF,   _, 0x0, 0xA) => self.wait_key_press(digit_2),
-            (0xF,   _, 0x1, 0x5) => self.set_dt_vx(digit_2),
-            (0xF,   _, 0x1, 0x8) => self.set_st_vx(digit_2),
-            (0xF,   _, 0x1, 0xE) => self.increment_i_vx(digit_2),
-            (0xF,   _, 0x2, 0x9) => self.set_i_font_address(digit_2),
+            (0xF,   _, 0x1, 0x5) => self.set_dt_to_vx(digit_2),
+            (0xF,   _, 0x1, 0x8) => self.set_st_to_vx(digit_2),
+            (0xF,   _, 0x1, 0xE) => self.increment_i_by_vx(digit_2),
+            (0xF,   _, 0x2, 0x9) => self.set_i_to_font_address(digit_2),
             (0xF,   _, 0x3, 0x3) => self.load_i_bcd_vx(digit_2),
             (0xF,   _, 0x5, 0x5) => self.store_v0_vx_into_i(digit_2),
             (0xF,   _, 0x6, 0x5) => self.load_i_into_v0_vx(digit_2),
@@ -221,7 +247,7 @@ impl Vm {
 
     /// 6XNN
     #[allow(clippy::cast_possible_truncation)]
-    fn set_vx_nn(&mut self, digit_2: u16, opcode: u16) {
+    fn set_vx_to_nn(&mut self, digit_2: u16, opcode: u16) {
         let x = digit_2 as usize;
         let nn = (opcode & 0xFF) as u8;
         self.v_reg[x] = nn;
@@ -236,27 +262,27 @@ impl Vm {
     }
 
     /// 8XY0
-    fn set_vx_vy(&mut self, digit_2: u16, digit_3: u16) {
+    fn set_vx_to_vy(&mut self, digit_2: u16, digit_3: u16) {
         let x = digit_2 as usize;
         let y = digit_3 as usize;
         self.v_reg[x] = self.v_reg[y];
     }
 
     /// 8XY1
-    fn set_vx_bit_or_vy(&mut self, digit_2: u16, digit_3: u16) {
+    fn set_vx_to_bit_or_vy(&mut self, digit_2: u16, digit_3: u16) {
         let x = digit_2 as usize;
         let y = digit_3 as usize;
         self.v_reg[x] |= self.v_reg[y];
     }
 
     /// 8XY2
-    fn set_vx_bit_and_vy(&mut self, digit_2: u16, digit_3: u16) {
+    fn set_vx_to_bit_and_vy(&mut self, digit_2: u16, digit_3: u16) {
         let x = digit_2 as usize;
         let y = digit_3 as usize;
         self.v_reg[x] &= self.v_reg[y];
     }
     /// 8XY3
-    fn set_vx_bit_xor_vy(&mut self, digit_2: u16, digit_3: u16) {
+    fn set_vx_to_bit_xor_vy(&mut self, digit_2: u16, digit_3: u16) {
         let x = digit_2 as usize;
         let y = digit_3 as usize;
         self.v_reg[x] ^= self.v_reg[y];
@@ -295,7 +321,7 @@ impl Vm {
     }
 
     /// 8XY7
-    fn set_vx_equal_vy_minus_vx(&mut self, digit_2: u16, digit_3: u16) {
+    fn set_vx_to_vy_minus_vx(&mut self, digit_2: u16, digit_3: u16) {
         let x = digit_2 as usize;
         let y = digit_3 as usize;
 
@@ -324,7 +350,7 @@ impl Vm {
     }
 
     /// ANNN
-    fn set_i_nnn(&mut self, opcode: u16) {
+    fn set_i_to_nnn(&mut self, opcode: u16) {
         let nnn = opcode & 0xFFF;
         self.i_reg = nnn;
     }
@@ -337,7 +363,7 @@ impl Vm {
 
     /// CXNN
     #[allow(clippy::cast_possible_truncation)]
-    fn set_vx_rand_nn(&mut self, digit_2: u16, opcode: u16) {
+    fn set_vx_to_bit_and_rand_nn(&mut self, digit_2: u16, opcode: u16) {
         let x = digit_2 as usize;
         let nn = (opcode & 0xFF) as u8;
         let rng = random::<u8>();
@@ -392,7 +418,7 @@ impl Vm {
     }
 
     /// FX07
-    fn set_vx_dt(&mut self, digit_2: u16) {
+    fn set_vx_to_dt(&mut self, digit_2: u16) {
         let x = digit_2 as usize;
         self.v_reg[x] = self.delay_timer;
     }
@@ -415,26 +441,26 @@ impl Vm {
     }
 
     /// FX15
-    fn set_dt_vx(&mut self, digit_2: u16) {
+    fn set_dt_to_vx(&mut self, digit_2: u16) {
         let x = digit_2 as usize;
         self.delay_timer = self.v_reg[x];
     }
 
     /// FX18
-    fn set_st_vx(&mut self, digit_2: u16) {
+    fn set_st_to_vx(&mut self, digit_2: u16) {
         let x = digit_2 as usize;
         self.sound_timer = self.v_reg[x];
     }
 
     /// FX1E
-    fn increment_i_vx(&mut self, digit_2: u16) {
+    fn increment_i_by_vx(&mut self, digit_2: u16) {
         let x = digit_2 as usize;
         let vx = u16::from(self.v_reg[x]);
         self.i_reg = self.i_reg.wrapping_add(vx);
     }
 
     /// FX29
-    fn set_i_font_address(&mut self, digit_2: u16) {
+    fn set_i_to_font_address(&mut self, digit_2: u16) {
         let x = digit_2 as usize;
         let c = u16::from(self.v_reg[x]);
         self.i_reg = c * 5;
