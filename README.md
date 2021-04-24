@@ -14,6 +14,10 @@ $ cargo run --release --bin chimp_desktop roms\PUZZLE
 
 ### For the web version:
 
+You can find the static host [here](https://m5tfi.github.io/).
+
+Alternatively you can build it from the source:
+
 1. install `wasm-pack`
 
 ```
