@@ -82,11 +82,15 @@ async function run() {
     rom_selector.addEventListener("change", function (event) {
         reset_input()
 
+        let selector_value = event.target.value
+        if (selector_value == "") {
+            return
+        }
+
         if (anim_frame != 0) {
             window.cancelAnimationFrame(anim_frame)
         }
 
-        let selector_value = event.target.value
         let rom_url = new URL(selector_value,
             import.meta.url)
 
