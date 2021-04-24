@@ -11,7 +11,7 @@ canvas.width = WIDTH * SCALE
 canvas.height = HEIGHT * SCALE
 
 let ctx = canvas.getContext("2d")
-ctx.fillStyle = "black"
+ctx.fillStyle = "#1D1A05"
 ctx.fillRect(0, 0, WIDTH * SCALE, HEIGHT * SCALE)
 
 let file_input = document.getElementById("file-input")
@@ -121,9 +121,9 @@ function main_loop(vm) {
     }
     vm.tick_timers()
 
-    ctx.fillStyle = "black"
+    ctx.fillStyle = "#1D1A05"
     ctx.fillRect(0, 0, WIDTH * SCALE, HEIGHT * SCALE)
-    ctx.fillStyle = "white"
+    ctx.fillStyle = "#fffbbd"
     vm.draw(SCALE)
 
     anim_frame = window.requestAnimationFrame(() => {

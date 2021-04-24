@@ -128,6 +128,10 @@ header p {
     left: -100px;
 }
 
+canvas{
+    border: 1px solid var(--primary-color);
+}
+
 footer {
     display: flex;
     flex-direction: column;
