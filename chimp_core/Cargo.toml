@@ -5,4 +5,4 @@ authors = ["m5tfi"]
 edition = "2018"
 
 [dependencies]
-rand = "0.8.3"
+rand = { version = "0.7.3", features = ["wasm-bindgen"] }
