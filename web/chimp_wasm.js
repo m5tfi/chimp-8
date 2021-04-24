@@ -1,0 +1,1 @@
+../chimp_wasm/pkg/chimp_wasm.js

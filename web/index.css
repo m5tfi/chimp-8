@@ -1,0 +1,74 @@
+:root {
+    --primary-color: #fffbbd;
+    --secondary-color: #e6aa68;
+    --vivid-color: #7fb069;
+    --alert-color: #ca3c25;
+    --background-color: #1D1A05;
+    --font-size: 1em;
+    --primary-font: 'Press Start 2P', cursive;
+    --secondary-font: 'Press Start 2P', cursive;
+}
+
+body {
+    background-color: var(--background-color);
+    color: var(--primary-color);
+    margin: 0;
+    font-family: var(--primary-font);
+    display: flex;
+    flex-direction: column;
+    letter-spacing: .15em;
+}
+
+body>div {
+    display: flex;
+    flex-direction: column;
+    align-self: center;
+    margin: 0 auto 1em;
+}
+
+header {
+    border-left: 0.8em solid var(--alert-color);
+    padding: 1em;
+    margin: 1.5em auto 3em;
+}
+
+header h1 {
+    color: var(--vivid-color);
+    padding: 0;
+    margin: 0;
+}
+
+header p {
+    color: var(--secondary-color);
+    padding: 0.5em 0 0;
+    margin: 0;
+    overflow: hidden;
+    border-right: .15em solid transparent;
+    white-space: nowrap;
+    padding-right: 0.5em;
+    animation:
+        typing 3.5s steps(50, end),
+        blink-caret 0.5s step-end 15;
+}
+
+@keyframes typing {
+    from {
+        width: 0
+    }
+
+    to {
+        width: 100%
+    }
+}
+
+@keyframes blink-caret {
+
+    from,
+    to {
+        border-color: transparent
+    }
+
+    50% {
+        border-color: var(--secondary-color)
+    }
+}
