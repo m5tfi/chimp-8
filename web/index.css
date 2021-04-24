@@ -1,5 +1,6 @@
 :root {
     --primary-color: #fffbbd;
+    --primary-color-faded: #fffbbd71;
     --secondary-color: #e6aa68;
     --vivid-color: #7fb069;
     --alert-color: #ca3c25;
@@ -9,10 +10,14 @@
     --secondary-font: 'Press Start 2P', cursive;
 }
 
+* {
+    margin: 0;
+    padding: 0;
+}
+
 body {
     background-color: var(--background-color);
     color: var(--primary-color);
-    margin: 0;
     font-family: var(--primary-font);
     display: flex;
     flex-direction: column;
@@ -29,19 +34,16 @@ body>div {
 header {
     border-left: 0.8em solid var(--alert-color);
     padding: 1em;
-    margin: 1.5em auto 3em;
+    margin: 1.5em auto 4em;
 }
 
 header h1 {
     color: var(--vivid-color);
-    padding: 0;
-    margin: 0;
 }
 
 header p {
     color: var(--secondary-color);
-    padding: 0.5em 0 0;
-    margin: 0;
+    padding-top: 0.5em;
     overflow: hidden;
     border-right: .15em solid transparent;
     white-space: nowrap;
@@ -71,4 +73,93 @@ header p {
     50% {
         border-color: var(--secondary-color)
     }
+}
+
+#selectors {
+    font-size: 0.7em;
+    flex-direction: row;
+    margin-bottom: 4em;
+}
+
+#selectors>div,
+#selectors>input,
+#selectors>select {
+    align-self: center;
+    padding-right: 1em;
+}
+
+#rom-selector {
+    appearance: none;
+    color: inherit;
+    background-color: transparent;
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    outline: none;
+    border: 0.1em solid var(--alert-color);
+    padding: 0.5em;
+    cursor: pointer;
+    grid-template-areas: "select";
+    align-items: center;
+}
+
+#rom-selector>option {
+    background-color: var(--background-color);
+}
+
+#rom-selector::after {
+    justify-self: right;
+    content: "";
+    width: 0.8em;
+    height: 0.5em;
+    color: var(--alert-color);
+}
+
+#file-input-div {
+    display: flex;
+    width: 100%;
+    border: 1px solid var(--alert-color);
+    padding: 0.5em;
+}
+
+#file-input {
+    position: absolute;
+    top: -100px;
+    left: -100px;
+}
+
+footer {
+    display: flex;
+    flex-direction: column;
+    align-self: center;
+    margin-top: 2em;
+    color: var(--primary-color-faded);
+}
+
+#controls>p {
+    margin-bottom: 1em;
+    font-size: 0.8em;
+    text-align: center;
+}
+
+#controls>table {
+    align-self: center;
+    align-content: center;
+    text-align: center;
+    width: 100%;
+}
+
+#source-code {
+    margin-top: 1em;
+    align-self: center;
+    font-size: 0.7em;
+    color: var(--primary-color-faded);
+}
+
+#source-code:hover {
+    color: var(--primary-color);
+}
+
+#source-code:visited {
+    color: var(--primary-color-faded);
 }

@@ -3,10 +3,19 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Chimp-8</title>
+    <meta name="description" content="a chip8 emulator">
+
+    <link type="text/plain" href="roms/rom_list.txt">
     <link rel="stylesheet" href="index.css">
+
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+    <link rel="icon" href="icons/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png">
+
+    <title>Chimp-8</title>
 </head>
 
 <body>
@@ -15,25 +24,59 @@
         <p>A monkey followed text to make a Chip-8 emulator</p>
     </header>
 
-    <div>
-    <!-- <div id="rom-selector-div">
-            <label for="fileinput">Select one of our roms:</label>
-            <select id="rom-selector"></select>
-        </div> -->
+    <div id="selectors">
+        <div id="rom-selector-div">
+            <select id="rom-selector" src="roms/rom_list.txt">
+                <option value="">-- select a rom --</option>
+            </select>
+        </div>
 
-    <!-- <p style="align-self: center;">or</p> -->
+        <div>or</div>
 
-    <div id="file-selector-div">
-        <label for="fileinput">open a local rom: </label>
-        <input type="file" , id="fileinput" autocomplete="off" />
+        <div id="file-input-div">
+            <label for="file-input">Browse...</label>
+            <input type="file" id="file-input" autocomplete="off" />
+        </div>
     </div>
-    </div>
 
-    <div>
+    <div id="canvas-div">
         <canvas id="canvas">If you see this message, then your browser might not support HTML5</canvas>
     </div>
 
-    <footer>footer!</footer>
+    <footer>
+        <div id="controls">
+            <p>controls</p>
+            <table>
+                <tr>
+                    <td>1</td>
+                    <td>2</td>
+                    <td>3</td>
+                    <td>4</td>
+                </tr>
+                <tr>
+                    <td>q</td>
+                    <td>w</td>
+                    <td>e</td>
+                    <td>r</td>
+                </tr>
+                <tr>
+                    <td>a</td>
+                    <td>s</td>
+                    <td>d</td>
+                    <td>f</td>
+                </tr>
+                <tr>
+                    <td>z</td>
+                    <td>x</td>
+                    <td>c</td>
+                    <td>v</td>
+                </tr>
+            </table>
+        </div>
+
+        <a href="https://github.com/m5tfi/chimp-8" target="_blank" id="source-code">source code</a>
+    </footer>
+
 </body>
 
 <script type="module" src="index.js"></script>

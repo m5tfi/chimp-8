@@ -14,7 +14,31 @@ let ctx = canvas.getContext("2d")
 ctx.fillStyle = "black"
 ctx.fillRect(0, 0, WIDTH * SCALE, HEIGHT * SCALE)
 
-let input = document.getElementById("fileinput")
+let file_input = document.getElementById("file-input")
+let file_input_div = document.getElementById("file-input-div")
+let rom_selector = document.getElementById("rom-selector")
+
+async function populate_rom_selector() {
+    let file_url = new URL("roms/rom_list.txt",
+        import.meta.url)
+
+    fetch(file_url).then(file => file.text()).then(text => {
+        let roms = text.split(/\r?\n/)
+
+        for (let i = 0; i < roms.length; i++) {
+            if (roms[i] == "") {
+                continue
+            }
+            let r = "roms/" + roms[i]
+            let option = document.createElement("option")
+            option.setAttribute("value", r)
+            option.text = roms[i]
+            rom_selector.appendChild(option)
+        }
+    })
+}
+
+populate_rom_selector()
 
 async function run() {
     await init()
@@ -28,7 +52,9 @@ async function run() {
         vm.keypress(event, false)
     })
 
-    input.addEventListener("change", function (event) {
+    file_input_div.addEventListener("change", function (event) {
+        rom_selector.selectedIndex = 0;
+
         if (anim_frame != 0) {
             window.cancelAnimationFrame(anim_frame)
         }
@@ -52,6 +78,37 @@ async function run() {
         reader.readAsArrayBuffer(file)
 
     }, false)
+
+    rom_selector.addEventListener("change", function (event) {
+        reset_input()
+
+        if (anim_frame != 0) {
+            window.cancelAnimationFrame(anim_frame)
+        }
+
+        let selector_value = event.target.value
+        let rom_url = new URL(selector_value,
+            import.meta.url)
+
+        fetch(rom_url).then(file => file.arrayBuffer()).then(buffer => {
+            const rom = new Uint8Array(buffer)
+            console.log(buffer)
+            vm.reset()
+            vm.load_game(rom)
+            main_loop(vm)
+
+            console.log(vm)
+        })
+    }, false)
+}
+
+function reset_input() {
+    file_input.remove()
+    let new_input = document.createElement('input')
+    new_input.setAttribute("type", "file")
+    new_input.setAttribute("id", "file-input")
+    file_input_div.appendChild(new_input)
+    file_input = new_input
 }
 
 function main_loop(vm) {
@@ -71,15 +128,3 @@ function main_loop(vm) {
 }
 
 run().catch(console.error)
-
-function rom_selector() {
-    let select_tag = document.getElementById("rom-selector")
-    for(let i=0;i < 10; i++){
-        let option = document.createElement("option")
-        option.setAttribute("value", i)
-        option.text = "rom " + i
-        select_tag.appendChild(option)
-    }
-}
-
-rom_selector()
