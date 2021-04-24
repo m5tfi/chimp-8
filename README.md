@@ -45,6 +45,14 @@ or use `miniserve`
 $ miniserve web
 ```
 
+5. (optional) If we want to add more roms to the web dropdown list instead of using the browse version. First, we need put them inside the `web/roms` directory. Then, while we are inside the `web/roms` directory, we run:
+
+```
+$ python ../../generate_rom_list.py -d .
+```
+
+This will generate a new `rom_list.txt` which will be read from the javascript and auto-populate the dropdown list. 
+
 ---
 
 
